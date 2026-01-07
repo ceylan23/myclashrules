@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clash 配置分发中心</title>
+    <style>
+        :root {
+            --accent: #0078d4;
+            --bg: #f5f5f5;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0;
+        }
+        .fluent-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 90%; max-width: 400px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        h2 { margin-top: 0; font-weight: 600; font-size: 20px; color: #201f1e; }
+        input {
+            width: 100%; padding: 10px; margin: 15px 0;
+            border: 1px solid #8a8886; border-radius: 4px;
+            box-sizing: border-box; outline: none;
+        }
+        input:focus { border-color: var(--accent); }
+        button {
+            width: 100%; padding: 10px;
+            background: var(--accent); color: white;
+            border: none; border-radius: 4px; cursor: pointer;
+            font-weight: 500;
+        }
+        button:hover { background: #106ebe; }
+        .info { font-size: 12px; color: #605e5c; margin-top: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="fluent-card">
+    <h2>导入订阅配置</h2>
+    <p style="font-size: 14px; color: #666;">输入您的原始订阅，自动加载 GitHub 上的分流规则。</p>
+    
+    <input type="text" id="subUrl" placeholder="在此粘贴订阅链接">
+    <button onclick="importConfig()">一键导入至 Clash</button>
+
+    <div class="info">
+        基于 GitHub 远程模板 · 完整规则不省略
+    </div>
+</div>
+
+<script>
+    function importConfig() {
+        const sub = document.getElementById('subUrl').value.trim();
+        if (!sub) { alert('请输入链接'); return; }
+
+        // 1. 你在 GitHub 上存放的原始分流.yaml 的 RAW 链接
+        const githubRawYaml = "https://raw.githubusercontent.com/你的用户名/仓库名/main/分流.yaml";
+
+        /**
+         * 2. 解决方案：
+         * 我们使用后端转换器，但让它去【远程读取】你的 GitHub 文件。
+         * 这样发送给 Clash 的 URL 就会非常短，不会报 400 错误。
+         */
+        const backend = "https://api.v1.mk/sub?";
+        
+        // 构建转换链接：指定模板为你的 GitHub 文件
+        const convertedUrl = `${backend}target=clash&url=${encodeURIComponent(sub)}&config=${encodeURIComponent(githubRawYaml)}`;
+        
+        // 3. 唤起 Clash
+        const clashScheme = `clash://install-config?url=${encodeURIComponent(convertedUrl)}&name=GitHub_Full_Rules`;
+        
+        window.location.href = clashScheme;
+    }
+</script>
+
+</body>
+</html>
